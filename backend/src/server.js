@@ -4,19 +4,26 @@ import {connectDB} from "./lib/db.js"
 import {serve} from "inngest/express"
 import path from "path"
 import cors from "cors"
+import { clerkMiddleware } from "@clerk/express"
 import { inngest,functions } from "./lib/inngest.js"
+import { protectRoute } from "./middleware/protectRoute.js"
+
+import chatRoutes from "./routes/chatRoutes.js";
+
 const app=express()
 const _dirname=path.resolve();
 
 app.use(express.json())
 app.use(cors({origin:ENV.CLIENT_URL,credentials:true}))
+app.use(clerkMiddleware())
+
 app.use("/api/inngest",serve({client:inngest,functions}))
+app.use("/api/chat", chatRoutes);
+
 app.get("/health",(req,res)=>{
     res.status(200).json({msg:"success from backend 123 "});
 })
-app.get("/books",(req,res)=>{
-    res.status(200).json({msg:"success from backend 123 books"});
-})
+
 if(ENV.NODE_ENV=="production"){
     app.use(express.static(path.join(_dirname,"../frontend/dist")))
 
